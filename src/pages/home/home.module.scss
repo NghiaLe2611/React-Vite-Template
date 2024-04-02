@@ -1,0 +1,17 @@
+.table{
+    th{
+        font-family: 'Roboto', sans-serif;
+        font-size: 16px;
+    }
+}
+
+.circle{
+    @apply text-white font-medium text-xl #{!important};
+    @apply flex items-center justify-center rounded-full mx-2 w-12 h-12 #{!important};
+    background-color: #a87219 !important;
+    background-image: radial-gradient(circle at top right, #fbfba0, #a87219 50%) !important;
+    &.bg-last-item{
+        @apply bg-red-600 #{!important};
+        background-image: radial-gradient(circle at top right, #fcb6b4, #b51711 50%) !important;
+    }
+}

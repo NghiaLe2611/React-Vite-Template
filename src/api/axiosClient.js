@@ -1,6 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import queryString from 'query-string';
+// import queryString from 'query-string';
 
 const axiosClient = axios.create({
     baseURL: import.meta.env.REACT_APP_API_URL,
@@ -8,7 +8,7 @@ const axiosClient = axios.create({
         'Content-Type': 'application/json',
         // 'Access-Control-Allow-Origin': '*',
     },
-    paramsSerializer: (params) => queryString.stringify(params),
+    // paramsSerializer: (params) => queryString.stringify(params),
     timeout: 10000
 });
 

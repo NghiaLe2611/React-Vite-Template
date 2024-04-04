@@ -19,12 +19,22 @@ import {
 	Th,
 	Thead,
 	Tr,
+	useDisclosure,
+	// styled,
 } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import classes from './home.module.scss';
 import { countNumberOccurrences } from '@/helpers';
+import styled from '@emotion/styled';
+
+const StyledPopover = styled(Box)`
+	background-color: red;
+	position: fixed;
+	top: 0;
+	left: 0;
+`;
 
 const fetchData = async () => {
 	try {
@@ -59,7 +69,7 @@ const MyPopover = ({ anchorEl, onClose, children }) => {
 				onClose();
 			}
 		},
-		[anchorEl, onClose],
+		[anchorEl, onClose]
 	);
 
 	// Calculate popover position when anchorEl changes
@@ -105,43 +115,20 @@ const HomePage = () => {
 		queryKey: ['lottery_result'],
 		queryFn: fetchData,
 	});
+	const { isOpen, onToggle, onClose } = useDisclosure();
 
 	const [activeNumber, setActiveNumber] = useState(null);
 	const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
 	const [anchorEl, setAnchorEl] = useState(null);
 
-	// Function to handle opening the popover
-	const handlePopoverOpen = (event, num) => {
+	const handleMouseEnter = (e, num) => {
 		setActiveNumber(num);
-		setAnchorEl(event.currentTarget);
-	};
-
-	// Function to handle closing the popover
-	const handlePopoverClose = () => {
-		setAnchorEl(null);
-		setActiveNumber(null);
-	};
-
-	const handleMouseEnter = (number, anchor) => {
-		const rect = anchor.getBoundingClientRect();
-		setActiveNumber({ number, count: countNumberOccurrences(data, number) });
-		setPopoverPosition({ top: rect.top + rect.height, left: rect.left });
+		setPopoverPosition({ top: e.clientY, left: e.clientX });
 	};
 
 	const handleMouseLeave = () => {
 		setActiveNumber(null);
 	};
-
-	const handleSetActiveNumber = (num) => {
-		console.log(111, num);
-		setActiveNumber((prev) => {
-			if (prev !== num) return num;
-			return prev;
-		});
-	};
-
-	// console.log(activeNumber);
-	console.log(anchorEl);
 
 	const content = useMemo(() => {
 		if (isLoading) {
@@ -152,9 +139,6 @@ const HomePage = () => {
 			<div className='p-2'>
 				<Container maxW='container.md'>
 					{data ? <div className='text-right font-medium'>Tổng: {data.length} kỳ</div> : null}
-					<div>
-						<strong>{activeNumber}</strong>
-					</div>
 
 					{/* <MyPopover anchorEl={anchorEl} onClose={handlePopoverClose}>
 						<div>
@@ -193,66 +177,20 @@ const HomePage = () => {
 												<Td>
 													<div className='flex justify-center mb-4'>
 														{item.numbers.map((number, index) => (
-															<Box as='span' key={number}>
-																<Popover trigger='hover'>
-																	<PopoverTrigger>
-																		<Button
-																			className={classNames(`${classes.circle}`, {
-																				[classes['bg-last-item']]:
-																					index === item.numbers.length - 1,
-																			})}>
-																			{number}
-																		</Button>
-																	</PopoverTrigger>
-																	<PopoverContent
-																		sx={{
-																			width: 'max-content',
-																		}}>
-																		<PopoverBody>
-																			Xuất hiện:&nbsp;
-																			{countNumberOccurrences(data, number)} lần
-																		</PopoverBody>
-																	</PopoverContent>
-																</Popover>
-																{/* {activeNumber === number ? (
-																	<Popover trigger='hover' isOpen={true}>
-																		<PopoverTrigger>
-																			<Button
-																				className={classNames(
-																					`${classes.circle}`,
-																					{
-																						[classes['bg-last-item']]:
-																							index ===
-																							item.numbers.length - 1,
-																					},
-																				)}>
-																				{number}
-																			</Button>
-																		</PopoverTrigger>
-																		<PopoverContent
-																			sx={{
-																				width: 'max-content',
-																			}}>
-																			<PopoverBody>
-																				Xuất hiện:
-																				{countNumberOccurrences(data, number)}
-																				lần
-																			</PopoverBody>
-																		</PopoverContent>
-																	</Popover>
-																) : (
-																	<Box
-																		className={classNames(`${classes.circle}`, {
-																			[classes['bg-last-item']]:
-																				index === item.numbers.length - 1,
-																		})}
-																		onMouseEnter={() =>
-																			setActiveNumber(number)
-																		}
-																		onMouseLeave={() => setActiveNumber(null)}>
-																		{number}
-																	</Box>
-																)} */}
+															<Box
+																as='span'
+																key={number}
+																className={classNames(`${classes.circle}`, {
+																	[classes['bg-last-item']]:
+																		index === item.numbers.length - 1,
+																})}
+																// onMouseEnter={(e) => handleMouseEnter(e, number)}
+																// onMouseLeave={handleMouseLeave}
+																onClick={() => {
+																	setActiveNumber(number);
+																	onToggle();
+																}}>
+																{number}
 															</Box>
 														))}
 													</div>
@@ -264,16 +202,42 @@ const HomePage = () => {
 						</Table>
 					</TableContainer>
 				</Container>
-
-				{/* <pre style={{whiteSpace: 'normal'}}>{JSON.stringify(data)}</pre> */}
 			</div>
 		);
 	}, [data, isLoading]);
-
+	
 	return (
-		<div>
+		<div className='lottery-result'>
 			<h1 className='text-center font-bold text-xl mb-10'>Homepage</h1>
 			<div className='content text-center'>{content}</div>
+			{/* <StyledPopover
+				style={{
+					top: popoverPosition.top + 'px',
+					left: popoverPosition.left + 'px',
+				}}> */}
+				<Popover
+					variant='LOTTERY'
+					//  isOpen={true}
+					isOpen={Boolean(activeNumber)}
+					onClose={onClose}
+					placement='right'
+					closeOnBlur={false}>
+					<PopoverTrigger>
+						<Button sx={{ display: 'none' }}></Button>
+					</PopoverTrigger>
+					<PopoverContent
+						sx={{
+							width: 'max-content',
+							outline: 'none',
+							boxShadow: 'none !important',
+						}}>
+						<PopoverBody>
+							Xuất hiện:&nbsp;
+							{activeNumber ? `{${countNumberOccurrences(data, activeNumber)}} lần` : null}
+						</PopoverBody>
+					</PopoverContent>
+				</Popover>
+			{/* </StyledPopover> */}
 		</div>
 	);
 };

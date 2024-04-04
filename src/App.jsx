@@ -1,7 +1,7 @@
 import routes from '@/router';
-import {Box} from '@chakra-ui/react';
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
-import {useRoutes} from 'react-router-dom';
+import { Box } from '@chakra-ui/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useRoutes } from 'react-router-dom';
 
 const queryClient = new QueryClient();
 

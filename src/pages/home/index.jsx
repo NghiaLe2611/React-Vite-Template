@@ -1,15 +1,14 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
+import { useEffect, useMemo, useState } from 'react';
 import axiosClient from '@/api/axiosClient';
+import { countNumberOccurrences, countOddAndEven } from '@/helpers';
 import {
 	Box,
 	Button,
 	Container,
 	Popover,
-	PopoverArrow,
 	PopoverBody,
-	PopoverCloseButton,
 	PopoverContent,
-	PopoverHeader,
 	PopoverTrigger,
 	Spinner,
 	Table,
@@ -20,21 +19,11 @@ import {
 	Thead,
 	Tr,
 	useDisclosure,
-	// styled,
 } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import classNames from 'classnames';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classes from './home.module.scss';
-import { countNumberOccurrences } from '@/helpers';
-import styled from '@emotion/styled';
-
-const StyledPopover = styled(Box)`
-	background-color: red;
-	position: fixed;
-	top: 0;
-	left: 0;
-`;
+// import styled from '@emotion/styled';
 
 const fetchData = async () => {
 	try {
@@ -51,67 +40,8 @@ const fetchData = async () => {
 	}
 };
 
-const MyPopover = ({ anchorEl, onClose, children }) => {
-	const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
-
-	// Calculate popover position based on anchor element
-	const calculatePopoverPosition = useCallback(() => {
-		if (anchorEl) {
-			const rect = anchorEl.getBoundingClientRect();
-			setPopoverPosition({ top: rect.bottom, left: rect.left });
-		}
-	}, [anchorEl]);
-
-	// Close the popover when clicked outside
-	const handleClickOutside = useCallback(
-		(e) => {
-			if (anchorEl && !anchorEl.contains(e.target)) {
-				onClose();
-			}
-		},
-		[anchorEl, onClose]
-	);
-
-	// Calculate popover position when anchorEl changes
-	useEffect(() => {
-		calculatePopoverPosition();
-	}, [anchorEl, calculatePopoverPosition]);
-
-	// Close the popover when the document is clicked
-	useEffect(() => {
-		document.addEventListener('mouseleave', handleClickOutside);
-		return () => {
-			document.removeEventListener('mouseleave', handleClickOutside);
-		};
-	}, [handleClickOutside]);
-
-	console.log(111, anchorEl);
-
-	return (
-		<div
-			className='hahaha'
-			style={{
-				position: 'fixed',
-				top: popoverPosition.top,
-				left: popoverPosition.left,
-				display: anchorEl ? 'block' : 'none',
-				zIndex: 9999,
-				backgroundColor: 'black',
-				boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-				borderRadius: '4px',
-				padding: '8px',
-				color: '#fff',
-				width: 100,
-				height: 100,
-			}}>
-			{children}
-		</div>
-	);
-};
-
 const HomePage = () => {
-	// Data [{ date, numbers: [] }]
-	const { isLoading, isError, data, error } = useQuery({
+	const { isLoading, data } = useQuery({
 		queryKey: ['lottery_result'],
 		queryFn: fetchData,
 	});
@@ -130,22 +60,31 @@ const HomePage = () => {
 			}
 		};
 
-		document.addEventListener('mouseover', handleMouse)
-	
+		document.addEventListener('mouseover', handleMouse);
 
 		return () => {
 			document.removeEventListener('mouseover', handleMouse);
-		}
+		};
 	}, [activeNumber]);
 
 	const handleMouseEnter = (e, num) => {
 		setActiveNumber(num);
 
 		const { top, left } = e.target.getBoundingClientRect();
-		const topPos = top + window.scrollY + 30;
+		const topPos = top + 35;
 		const leftPos = left + window.scrollX + 10;
 
 		setPopoverPosition({ top: topPos, left: leftPos });
+	};
+
+	
+	const handleStats = () => {
+		const { odd, even } = countOddAndEven(data);
+		alert(`Chẵn: ${even}, Lẻ: ${odd}`);
+	};
+
+	const handleAnalyze = () => {
+	
 	};
 
 	const content = useMemo(() => {
@@ -182,7 +121,7 @@ const HomePage = () => {
 																})}
 																onMouseEnter={(e) => handleMouseEnter(e, number)}
 																// onMouseLeave={handleMouseLeave}
-																>
+															>
 																{number}
 															</Box>
 														))}
@@ -214,7 +153,7 @@ const HomePage = () => {
 						<Button sx={{ display: 'none' }}></Button>
 					</PopoverTrigger>
 					<PopoverContent
-					id='number-popover'
+						id='number-popover'
 						sx={{
 							width: 'max-content',
 							outline: 'none',
@@ -229,6 +168,10 @@ const HomePage = () => {
 					</PopoverContent>
 				</Popover>
 			) : null}
+			<div className={classes['wrap-btn']}>
+				<Button colorScheme='primary' className='mb-1' onClick={handleStats}>Thống kê</Button>
+				<Button colorScheme='blue' onClick={handleAnalyze}>Phân tích</Button>
+			</div>
 		</div>
 	);
 };

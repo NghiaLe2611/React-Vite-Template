@@ -24,7 +24,7 @@ import {
 } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import classNames from 'classnames';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classes from './home.module.scss';
 import { countNumberOccurrences } from '@/helpers';
 import styled from '@emotion/styled';
@@ -119,15 +119,33 @@ const HomePage = () => {
 
 	const [activeNumber, setActiveNumber] = useState(null);
 	const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
-	const [anchorEl, setAnchorEl] = useState(null);
+
+	// Handle mouse leave number
+	useEffect(() => {
+		const handleMouse = (e) => {
+			if (activeNumber) {
+				if (!e.target.closest('.chakra-popover__content')) {
+					setActiveNumber(null);
+				}
+			}
+		};
+
+		document.addEventListener('mouseover', handleMouse)
+	
+
+		return () => {
+			document.removeEventListener('mouseover', handleMouse);
+		}
+	}, [activeNumber]);
 
 	const handleMouseEnter = (e, num) => {
 		setActiveNumber(num);
-		setPopoverPosition({ top: e.clientY, left: e.clientX });
-	};
 
-	const handleMouseLeave = () => {
-		setActiveNumber(null);
+		const { top, left } = e.target.getBoundingClientRect();
+		const topPos = top + window.scrollY + 30;
+		const leftPos = left + window.scrollX + 10;
+
+		setPopoverPosition({ top: topPos, left: leftPos });
 	};
 
 	const content = useMemo(() => {
@@ -139,28 +157,6 @@ const HomePage = () => {
 			<div className='p-2'>
 				<Container maxW='container.md'>
 					{data ? <div className='text-right font-medium'>Tổng: {data.length} kỳ</div> : null}
-
-					{/* <MyPopover anchorEl={anchorEl} onClose={handlePopoverClose}>
-						<div>
-							<p>{countNumberOccurrences(data, activeNumber)}</p>
-						</div>
-					</MyPopover> */}
-
-					{/* <Popover
-						isOpen={activeNumber !== null}
-						onClose={handleMouseLeave}
-						placement='right'
-                        // style={{ top: popoverPosition.top, left: popoverPosition.left }}
-						{...popoverPosition}
-                        >
-						<PopoverTrigger>
-							<Box display='none' />
-						</PopoverTrigger>
-						<PopoverContent sx={{ width: 'max-content' }}>
-							<PopoverBody>Xuất hiện: {countNumberOccurrences(data, activeNumber)} lần</PopoverBody>
-						</PopoverContent>
-					</Popover> */}
-
 					<TableContainer className='mx-auto'>
 						<Table className={classes.table}>
 							<Thead>
@@ -184,12 +180,9 @@ const HomePage = () => {
 																	[classes['bg-last-item']]:
 																		index === item.numbers.length - 1,
 																})}
-																// onMouseEnter={(e) => handleMouseEnter(e, number)}
+																onMouseEnter={(e) => handleMouseEnter(e, number)}
 																// onMouseLeave={handleMouseLeave}
-																onClick={() => {
-																	setActiveNumber(number);
-																	onToggle();
-																}}>
+																>
 																{number}
 															</Box>
 														))}
@@ -205,19 +198,14 @@ const HomePage = () => {
 			</div>
 		);
 	}, [data, isLoading]);
-	
+
 	return (
 		<div className='lottery-result'>
 			<h1 className='text-center font-bold text-xl mb-10'>Homepage</h1>
 			<div className='content text-center'>{content}</div>
-			{/* <StyledPopover
-				style={{
-					top: popoverPosition.top + 'px',
-					left: popoverPosition.left + 'px',
-				}}> */}
+			{activeNumber ? (
 				<Popover
 					variant='LOTTERY'
-					//  isOpen={true}
 					isOpen={Boolean(activeNumber)}
 					onClose={onClose}
 					placement='right'
@@ -226,18 +214,21 @@ const HomePage = () => {
 						<Button sx={{ display: 'none' }}></Button>
 					</PopoverTrigger>
 					<PopoverContent
+					id='number-popover'
 						sx={{
 							width: 'max-content',
 							outline: 'none',
 							boxShadow: 'none !important',
+							top: popoverPosition.top,
+							left: popoverPosition.left,
 						}}>
 						<PopoverBody>
 							Xuất hiện:&nbsp;
-							{activeNumber ? `{${countNumberOccurrences(data, activeNumber)}} lần` : null}
+							{activeNumber ? `${countNumberOccurrences(data, activeNumber)} lần` : null}
 						</PopoverBody>
 					</PopoverContent>
 				</Popover>
-			{/* </StyledPopover> */}
+			) : null}
 		</div>
 	);
 };

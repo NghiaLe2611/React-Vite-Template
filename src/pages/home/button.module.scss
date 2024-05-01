@@ -1,0 +1,8 @@
+.wrap-btn{
+    @apply flex flex-col fixed bottom-5 right-5;
+}
+
+.list{
+    @apply grid grid-cols-2 gap-0.5;
+
+}

@@ -1,7 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
-import { useEffect, useMemo, useState } from 'react';
 import axiosClient from '@/api/axiosClient';
-import { countNumberOccurrences, countOddAndEven } from '@/helpers';
+import { countNumberOccurrences } from '@/helpers';
 import {
 	Box,
 	Button,
@@ -22,6 +21,8 @@ import {
 } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import classNames from 'classnames';
+import { useEffect, useMemo, useState } from 'react';
+import Buttons from './Buttons';
 import classes from './home.module.scss';
 // import styled from '@emotion/styled';
 
@@ -45,7 +46,7 @@ const HomePage = () => {
 		queryKey: ['lottery_result'],
 		queryFn: fetchData,
 	});
-	const { isOpen, onToggle, onClose } = useDisclosure();
+	const { onClose } = useDisclosure();
 
 	const [activeNumber, setActiveNumber] = useState(null);
 	const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
@@ -75,16 +76,6 @@ const HomePage = () => {
 		const leftPos = left + window.scrollX + 10;
 
 		setPopoverPosition({ top: topPos, left: leftPos });
-	};
-
-	
-	const handleStats = () => {
-		const { odd, even } = countOddAndEven(data);
-		alert(`Chẵn: ${even}, Lẻ: ${odd}`);
-	};
-
-	const handleAnalyze = () => {
-	
 	};
 
 	const content = useMemo(() => {
@@ -168,10 +159,8 @@ const HomePage = () => {
 					</PopoverContent>
 				</Popover>
 			) : null}
-			<div className={classes['wrap-btn']}>
-				<Button colorScheme='primary' className='mb-1' onClick={handleStats}>Thống kê</Button>
-				<Button colorScheme='blue' onClick={handleAnalyze}>Phân tích</Button>
-			</div>
+            
+			<Buttons data={data} />
 		</div>
 	);
 };

@@ -24,11 +24,13 @@ import classNames from 'classnames';
 import { useEffect, useMemo, useState } from 'react';
 import Buttons from './Buttons';
 import classes from './home.module.scss';
+import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
+
 // import styled from '@emotion/styled';
 
-const fetchData = async () => {
+const fetchData = async (type) => {
 	try {
-		const res = await axiosClient('/crawl/lottery');
+		const res = await axiosClient(`/crawl/lottery?type=${type}`);
 		const { status, data } = res.data;
 		if (status === 200) {
 			return data;
@@ -41,15 +43,25 @@ const fetchData = async () => {
 	}
 };
 
+const TABS = {
+	0: 'Mega645',
+	1: 'Power655',
+};
+
 const HomePage = () => {
+	const [activeNumber, setActiveNumber] = useState(null);
+	const [tabIndex, setTabIndex] = useState(1);
+	const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
+
+	const type = useMemo(() => {
+		return TABS[tabIndex];
+	}, [tabIndex]);
+
 	const { isLoading, data } = useQuery({
-		queryKey: ['lottery_result'],
-		queryFn: fetchData,
+		queryKey: ['lottery_result', type],
+		queryFn: () => fetchData(type),
 	});
 	const { onClose } = useDisclosure();
-
-	const [activeNumber, setActiveNumber] = useState(null);
-	const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
 
 	// Handle mouse leave number
 	useEffect(() => {
@@ -78,9 +90,13 @@ const HomePage = () => {
 		setPopoverPosition({ top: topPos, left: leftPos });
 	};
 
+	const handleTabsChange = (index) => {
+		setTabIndex(index);
+	};
+
 	const content = useMemo(() => {
 		if (isLoading) {
-			return <Spinner />;
+			return <Spinner size='xl' color='blue.500' />;
 		}
 
 		return (
@@ -131,8 +147,16 @@ const HomePage = () => {
 
 	return (
 		<div className='lottery-result'>
-			<h1 className='text-center font-bold text-xl mb-10'>Homepage</h1>
-			<div className='content text-center'>{content}</div>
+			<h1 className='text-center font-bold text-[40px] mb-10'>Lottery Prediction</h1>
+
+			<Tabs variant='unstyled' index={tabIndex} onChange={handleTabsChange}>
+				<TabList>
+					<Tab _selected={{ color: '#fff', bg: 'var(--bg-primary)' }}>Mega 6/45</Tab>
+					<Tab _selected={{ color: '#fff', bg: 'var(--bg-primary)' }}>Power 6/55</Tab>
+				</TabList>
+			</Tabs>
+            <div className='content text-center'>{content}</div>
+			
 			{activeNumber ? (
 				<Popover
 					variant='LOTTERY'
@@ -159,7 +183,7 @@ const HomePage = () => {
 					</PopoverContent>
 				</Popover>
 			) : null}
-            
+
 			<Buttons data={data} />
 		</div>
 	);

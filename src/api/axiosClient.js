@@ -9,7 +9,7 @@ const axiosClient = axios.create({
         // 'Access-Control-Allow-Origin': '*',
     },
     // paramsSerializer: (params) => queryString.stringify(params),
-    timeout: 10000
+    timeout: 20000
 });
 
 // Add a request interceptor

@@ -11,7 +11,7 @@ import colors from 'tailwindcss/colors';
 const theme = extendTheme({
 	colors: {
 		primary: {
-			500: '#2db064',
+			500: 'var(--bg-primary)',
 			600: '#279d58', // hover
 			700: '#1e7f47', // click
 		},

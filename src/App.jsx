@@ -10,7 +10,7 @@ function App() {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<Box display='flex' flexDirection='column' className='h-full'>
-				<Box as='main' className='mx-auto max-w-screen-xl w-full px-3 md:px-0' flex={1} py={5}>
+				<Box as='main' className='mx-auto max-w-screen-xl w-full px-3 lg:px-0' flex={1} py={5}>
 					{element}
 				</Box>
 			</Box>

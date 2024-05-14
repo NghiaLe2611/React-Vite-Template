@@ -25,6 +25,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Buttons from './Buttons';
 import classes from './home.module.scss';
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
+import AnalyzeModal from '../AnalyzeModal';
 
 // import styled from '@emotion/styled';
 
@@ -50,6 +51,7 @@ const TABS = {
 
 const HomePage = () => {
 	const [activeNumber, setActiveNumber] = useState(null);
+    const [currentNumber, setCurrentNumber] = useState(null);
 	const [tabIndex, setTabIndex] = useState(1);
 	const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
 
@@ -61,7 +63,9 @@ const HomePage = () => {
 		queryKey: ['lottery_result', type],
 		queryFn: () => fetchData(type),
 	});
+
 	const { onClose } = useDisclosure();
+    const { isOpen, onOpen, onClose: closeAnalyzeModal } = useDisclosure()
 
 	// Handle mouse leave number
 	useEffect(() => {
@@ -93,6 +97,11 @@ const HomePage = () => {
 	const handleTabsChange = (index) => {
 		setTabIndex(index);
 	};
+
+    const openAnalyzeModal = (num) => {
+        onOpen();
+        setCurrentNumber(num);
+    };
 
 	const content = useMemo(() => {
 		if (isLoading) {
@@ -126,6 +135,7 @@ const HomePage = () => {
 																	[classes['bg-last-item']]:
 																		index === item.numbers.length - 1,
 																})}
+                                                                onClick={() => openAnalyzeModal(number)}
 																onMouseEnter={(e) => handleMouseEnter(e, number)}
 																// onMouseLeave={handleMouseLeave}
 															>
@@ -143,6 +153,7 @@ const HomePage = () => {
 				</Container>
 			</div>
 		);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [data, isLoading]);
 
 	return (
@@ -185,6 +196,8 @@ const HomePage = () => {
 			) : null}
 
 			<Buttons data={data} />
+
+            <AnalyzeModal data={data} isOpen={isOpen} onClose={closeAnalyzeModal} currentNumber={currentNumber} />
 		</div>
 	);
 };

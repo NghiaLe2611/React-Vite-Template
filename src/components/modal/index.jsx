@@ -22,11 +22,8 @@ const CustomModal = ({ btnText, modalHeader, colorScheme = 'primary', children }
 				<ModalOverlay />
 				<ModalContent>
 					{modalHeader && <ModalHeader>{modalHeader}</ModalHeader>}
-
 					<ModalCloseButton />
-
 					<ModalBody>{children}</ModalBody>
-
 					<ModalFooter>
 						<Button onClick={onClose}>
 							Close

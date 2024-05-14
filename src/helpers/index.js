@@ -1,7 +1,8 @@
 // Count occurences of number
 export function countNumberOccurrences(data, number) {
 	const numberCounts = {};
-
+    if (!data) return;
+    
 	data.forEach((item) => {
 		item.numbers.forEach((number) => {
 			if (numberCounts[number] === undefined) {
@@ -18,7 +19,7 @@ export function countNumberOccurrences(data, number) {
 
 export function countOccurrences(data) {
 	if (!data || !Array.isArray(data) || data.length === 0) {
-		return []; 
+		return [];
 	}
 
 	const counts = {};
@@ -29,8 +30,8 @@ export function countOccurrences(data) {
 			counts[item] = 1;
 		}
 	}
-    const arr = Object.entries(counts).map(([num, count]) => ({ num, count }));
-    return arr.sort((a, b) => b.count - a.count);
+	const arr = Object.entries(counts).map(([num, count]) => ({ num, count }));
+	return arr.sort((a, b) => b.count - a.count);
 }
 
 // Count odd/event numbers
@@ -50,4 +51,26 @@ export function countOddAndEven(data) {
 	}
 
 	return { odd: oddCount, even: evenCount };
+}
+
+export function occurrencesWithNumber(data, inputNumber) {
+	const occurrences = {};
+
+	data.forEach((arr) => {
+		if (arr.includes(Number(inputNumber))) {
+			// arr chính là số lần xuất hiện của number
+			arr.forEach((num) => {
+				if (Number(num) !== Number(inputNumber)) {
+					if (occurrences[num]) {
+						occurrences[num] += 1;
+					} else {
+						occurrences[num] = 1;
+					}
+				}
+			});
+		}
+	});
+
+    const arr = Object.entries(occurrences).map(([num, count]) => ({ num, count }));
+	return arr.sort((a, b) => b.count - a.count);
 }

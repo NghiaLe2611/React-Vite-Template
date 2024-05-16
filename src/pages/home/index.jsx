@@ -25,7 +25,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Buttons from './Buttons';
 import classes from './home.module.scss';
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
-import AnalyzeModal from '../AnalyzeModal';
+import AnalyzeModal from './AnalyzeModal';
 
 // import styled from '@emotion/styled';
 

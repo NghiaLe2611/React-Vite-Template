@@ -1,8 +1,8 @@
 // Count occurences of number
 export function countNumberOccurrences(data, number) {
 	const numberCounts = {};
-    if (!data) return;
-    
+	if (!data) return;
+
 	data.forEach((item) => {
 		item.numbers.forEach((number) => {
 			if (numberCounts[number] === undefined) {
@@ -71,6 +71,47 @@ export function occurrencesWithNumber(data, inputNumber) {
 		}
 	});
 
-    const arr = Object.entries(occurrences).map(([num, count]) => ({ num, count }));
+	const arr = Object.entries(occurrences).map(([num, count]) => ({ num, count }));
 	return arr.sort((a, b) => b.count - a.count);
 }
+
+export function occurencesOfNextTime(data, inputNumber) {
+	const result = [];
+	for (let i = data.length - 1; i >= 0; i--) {
+		const curArr = data[i];
+		if (curArr.includes(inputNumber)) {
+			if (data[i - 1]) {
+				result.push(data[i - 1]);
+			}
+		}
+	}
+	const arr = result.flat();
+	return countOccurrences(arr);
+}
+
+// function analyzeLotteryHistory(data) {
+// 	const numberFrequencies = {}; // Object to store frequency of each number
+// 	const mostFrequentNumbers = []; // Array to store most frequent numbers
+
+// 	// Calculate frequency for each number
+// 	for (const drawing of data) {
+// 		for (const number of drawing) {
+// 			if (numberFrequencies[number]) {
+// 				numberFrequencies[number]++;
+// 			} else {
+// 				numberFrequencies[number] = 1;
+// 			}
+// 		}
+// 	}
+
+// 	// Find most frequent numbers (replace 3 with your desired number)
+// 	const maxFrequency = Math.max(...Object.values(numberFrequencies));
+// 	for (const number in numberFrequencies) {
+// 		if (numberFrequencies[number] === maxFrequency) {
+// 			mostFrequentNumbers.push(parseInt(number)); // Parse string key to number
+// 		}
+// 	}
+
+// 	console.log('Number frequencies:', numberFrequencies);
+// 	console.log('Most frequent numbers:', mostFrequentNumbers);
+// }

@@ -61,9 +61,9 @@ const Buttons = ({ data }) => {
 					</Box>
 				</CustomModal>
 
-				<Button colorScheme='blue' onClick={handleAnalyze}>
+				{/* <Button colorScheme='blue' onClick={handleAnalyze}>
 					Phân tích
-				</Button>
+				</Button> */}
 			</div>
 		</Fragment>
 	) : null;

@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { memo } from 'react';
 
-const CustomModal = ({ btnText, modalHeader, colorScheme = 'primary', children }) => {
+const CustomModal = ({ btnText, modalHeader, colorScheme = 'primary', children, closable = false }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	return (
 		<>
@@ -24,11 +24,11 @@ const CustomModal = ({ btnText, modalHeader, colorScheme = 'primary', children }
 					{modalHeader && <ModalHeader>{modalHeader}</ModalHeader>}
 					<ModalCloseButton />
 					<ModalBody>{children}</ModalBody>
-					<ModalFooter>
-						<Button onClick={onClose}>
-							Close
-						</Button>
-					</ModalFooter>
+					{closable && (
+						<ModalFooter>
+							<Button onClick={onClose}>Close</Button>
+						</ModalFooter>
+					)}
 				</ModalContent>
 			</Modal>
 		</>

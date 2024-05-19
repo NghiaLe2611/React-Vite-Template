@@ -2,8 +2,6 @@ import routes from '@/router';
 import { Box } from '@chakra-ui/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRoutes } from 'react-router-dom';
-import * as tf from '@tensorflow/tfjs';
-import { useEffect, useState } from 'react';
 
 const queryClient = new QueryClient();
 
@@ -18,8 +16,6 @@ function toOneHot(drawing) {
 
 function App() {
 	const element = useRoutes(routes);
-	const [model, setModel] = useState(null);
-
 	// 1 number
 	// useEffect(() => {
 	// 	// Sample lottery history data (replace with your actual data source)
@@ -77,82 +73,10 @@ function App() {
 	// 	trainModel();
 	// }, []);
 
-	useEffect(() => {
-		// Sample lottery history data (replace with your actual data source)
-		const lotteryHistory = [
-			[1, 2, 3, 4, 5, 6],
-			[5, 6, 7, 8, 9, 10],
-			[11, 20, 22, 33, 44, 55],
-		];
-
-		// Function to prepare training data
-		function prepareTrainingData(lotteryHistory) {
-			const inputs = [];
-			const outputs = [];
-			for (const drawing of lotteryHistory) {
-				const input = toOneHot(drawing); // Input: entire drawing as one-hot encoded vector
-				inputs.push(input);
-
-				const output = drawing.map((number) => toOneHot([number])); // Output: list of one-hot encoded numbers
-				outputs.push(tf.concat(output)); // Concatenate to form a single vector for each output
-			}
-			return { inputs, outputs };
-		}
-
-		async function trainModel() {
-			const { inputs, outputs } = prepareTrainingData(lotteryHistory);
-
-			// Create and configure the model
-			const model = tf.sequential();
-			model.add(tf.layers.dense({ units: 64, activation: 'relu', inputShape: [56] })); // Hidden layer
-			model.add(tf.layers.dense({ units: 336, activation: 'softmax' })); // Output layer for 6 numbers (56 * 6 = 336)
-
-			model.compile({ loss: 'categoricalCrossentropy', optimizer: 'adam' });
-
-			// Train the model
-			await model.fit(
-				tf.tensor2d(inputs), // Input tensor
-				tf.tensor2d(outputs), // Output tensor
-				{
-					epochs: 100, // Adjust based on dataset size
-					batchSize: 1, // Adjust based on dataset size
-				},
-			);
-
-			setModel(model); // Save the trained model
-		}
-
-		trainModel();
-	}, []);
-
-	const handlePredict = () => {
-		if (!model) {
-			console.error('Model is not yet trained.');
-			return;
-		}
-
-		// Use the last entry in the lottery history as the basis for the next prediction
-		const lotteryHistory = [
-			[1, 2, 3, 4, 5, 6],
-			[5, 6, 7, 8, 9, 10],
-			[11, 20, 22, 33, 44, 55],
-		];
-		const lastDrawing = lotteryHistory[lotteryHistory.length - 1];
-		const inputTensor = tf.tensor2d([toOneHot(lastDrawing)]);
-
-		// Predict the next 6 numbers
-		const predictedOutput = model.predict(inputTensor).reshape([6, 56]);
-
-		const predictedNumbers = Array.from(predictedOutput.argMax(1).dataSync()).map((num) => num + 1);
-
-		console.log('Predicted next numbers:', predictedNumbers);
-	};
-
 	return (
 		<QueryClientProvider client={queryClient}>
 			<Box display='flex' flexDirection='column' className='h-full'>
 				<Box as='main' className='mx-auto max-w-screen-xl w-full px-3 lg:px-0' flex={1} py={5}>
-					{/* <button onClick={handlePredict}>Predict Next Numbers</button> */}
 					{element}
 				</Box>
 			</Box>

@@ -1,5 +1,5 @@
-import {useAppContext} from '@/contexts/AppContext';
-import {ImBlocked} from 'react-icons/im';
+import { useAppContext } from '@/contexts/AppContext';
+import { ImBlocked } from 'react-icons/im';
 
 const UnAuthorizedPage = () => {
 	return (
@@ -10,8 +10,8 @@ const UnAuthorizedPage = () => {
 	);
 };
 
-const PrivateRoute = ({children}) => {
-	const {userInfo} = useAppContext();
+const PrivateRoute = ({ children }) => {
+	const { userInfo } = useAppContext();
 
 	if (!userInfo) return <UnAuthorizedPage />;
 	if (userInfo) {

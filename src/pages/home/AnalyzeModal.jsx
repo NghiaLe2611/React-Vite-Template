@@ -45,8 +45,8 @@ const NextTimeNumberList = ({ data, currentNumber }) => {
 	const occurences = useMemo(() => {
 		return occurencesOfNextTime(data, Number(currentNumber));
 	}, [data, currentNumber]);
-    console.log(222, data, occurences);
-	const { firstData, secondData } = useDivideArr(occurences);
+
+    const { firstData, secondData } = useDivideArr(occurences);
 
 	return (
 		<div>
@@ -80,6 +80,16 @@ export default function AnalyzeModal({ isOpen, onClose, data, currentNumber }) {
 		return [];
 	}, [data]);
 
+    const ratio = useMemo(() => {
+        if (data) {
+            const count = countNumberOccurrences(data, currentNumber);
+            return (count * 100) / data.length;
+        }
+
+        return null;
+    }, [currentNumber, data]);
+    
+    console.log(123, ratio);
 	return (
 		<>
 			<Modal isOpen={isOpen} onClose={onClose}>
@@ -89,7 +99,8 @@ export default function AnalyzeModal({ isOpen, onClose, data, currentNumber }) {
 					<ModalCloseButton />
 					<ModalBody>
 						<h5 className='font-bold text-lg mb-2'>
-							Số lần xuất hiện: {countNumberOccurrences(data, currentNumber)}
+							Số lần xuất hiện: {countNumberOccurrences(data, currentNumber)} trên {data?.length} kỳ
+                            &nbsp;{ratio ? `(${ratio}%)` : null}
 						</h5>
 						<div className='grid grid-cols-2 gap-2'>
 							<OccurencesList data={arrData} currentNumber={currentNumber} />

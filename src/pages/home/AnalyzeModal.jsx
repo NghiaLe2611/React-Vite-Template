@@ -89,7 +89,6 @@ export default function AnalyzeModal({ isOpen, onClose, data, currentNumber }) {
         return null;
     }, [currentNumber, data]);
     
-    console.log(123, ratio);
 	return (
 		<>
 			<Modal isOpen={isOpen} onClose={onClose}>

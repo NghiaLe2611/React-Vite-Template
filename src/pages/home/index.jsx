@@ -158,8 +158,7 @@ const HomePage = () => {
 
 	return (
 		<div className='lottery-result'>
-			<h1 className='text-center font-bold text-[40px] mb-10'>Lottery Prediction</h1>
-
+			<h1 className='text-center font-bold text-[40px] mb-10'>Dự đoán Vietlott</h1>
 			<Tabs variant='unstyled' index={tabIndex} onChange={handleTabsChange}>
 				<TabList>
 					<Tab _selected={{ color: '#fff', bg: 'var(--bg-primary)' }}>Mega 6/45</Tab>
@@ -167,7 +166,6 @@ const HomePage = () => {
 				</TabList>
 			</Tabs>
             <div className='content text-center'>{content}</div>
-			
 			{activeNumber ? (
 				<Popover
 					variant='LOTTERY'

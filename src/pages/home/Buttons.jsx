@@ -5,32 +5,8 @@ import {Fragment, memo, useEffect, useMemo, useState} from 'react';
 import classes from './button.module.scss';
 import * as tf from '@tensorflow/tfjs';
 
-const trainModel = async (history) => {
-    const inputShape = history[0].length;
-	// Convert history to tensors
-	const inputTensor = tf.tensor2d(history.map((entry) => entry.slice(0, inputShape)));
-	const outputTensor = tf.tensor2d(history.map((entry) => entry.slice(0, inputShape)));
-
-	// Define the model
-	const model = tf.sequential();
-	model.add(tf.layers.dense({units: 64, inputShape: [inputShape], activation: 'relu'}));
-	model.add(tf.layers.dense({units: 64, activation: 'relu'}));
-	model.add(tf.layers.dense({units: inputShape}));
-
-	// Compile the model
-	model.compile({optimizer: 'adam', loss: 'meanSquaredError'});
-
-	// Train the model
-	await model.fit(inputTensor, outputTensor, {
-		epochs: 100, // You can adjust the number of epochs
-		shuffle: true,
-	});
-
-	return model;
-};
-
 // Train the model
-async function trainModel2(lotteryHistory) {
+async function trainModel(lotteryHistory, optimizer = 'adam', loss = 'meanSquaredError') {
 	// Prepare feature and target data
 	const features = [];
 	const targets = [];
@@ -38,19 +14,14 @@ async function trainModel2(lotteryHistory) {
 	const reversedHistory = lotteryHistory.slice().reverse();
 
 	for (let i = 0; i < reversedHistory.length - 1; i++) {
-		features.push(reversedHistory[i]); // Use the entire array as features
-		targets.push(reversedHistory[i + 1]); // The next draw's numbers as targets
+		features.push(reversedHistory[i]);
+		targets.push(reversedHistory[i + 1]);
 	}
-
-	// Convert arrays to tensors
-	// const xTrain = tf.tensor2d(features);
-	// const yTrain = tf.tensor2d(targets);
 
 	// Convert arrays to tensors with explicit shape
 	const xTrain = tf.tensor2d(features, [features.length, features[0].length]);
 	const yTrain = tf.tensor2d(targets, [targets.length, targets[0].length]);
 
-	// Print the tensors for verification
 	// xTrain.print();
 	// yTrain.print();
 
@@ -58,12 +29,11 @@ async function trainModel2(lotteryHistory) {
 	const model = tf.sequential();
 	model.add(tf.layers.dense({units: 128, activation: 'relu', inputShape: [xTrain.shape[1]]}));
 	model.add(tf.layers.dense({units: 64, activation: 'relu'}));
-	// model.add(tf.layers.dense({units: 7})); // 7 output units for next draw prediction
-    model.add(tf.layers.dense({ units: xTrain.shape[1], activation: 'linear' }));
+	model.add(tf.layers.dense({units: xTrain.shape[1], activation: 'linear'}));
 
 	model.compile({
-		optimizer: 'adam',
-		loss: 'meanSquaredError', // sparseCategoricalCrossentropy
+		optimizer, // sdg
+		loss, // sparseCategoricalCrossentropy
 		metrics: ['accuracy'],
 	});
 
@@ -85,15 +55,22 @@ async function trainModel2(lotteryHistory) {
 	return model;
 }
 
-// Function to one-hot encode a draw
-function oneHotEncode(draw, maxNumber = 55) {
-	const oneHot = new Array(maxNumber).fill(0);
-	draw.forEach((number) => {
-		if (number <= maxNumber) {
-			oneHot[number - 1] = 1; // Set corresponding position to 1 (0-indexed)
-		}
-	});
-	return oneHot;
+function adjustPredictedNumbers(numbers) {
+	// Ensure numbers are within the range 1-55 and unique
+	const adjustedNumbers = new Set();
+	for (let num of numbers) {
+		let adjusted = Math.round(num);
+		if (adjusted < 1) adjusted = 1;
+		if (adjusted > 55) adjusted = 55;
+		adjustedNumbers.add(adjusted);
+	}
+
+	// If there are less than 7 unique numbers, add random numbers to make it 7
+	while (adjustedNumbers.size < 7) {
+		adjustedNumbers.add(Math.floor(Math.random() * 55) + 1);
+	}
+
+	return Array.from(adjustedNumbers);
 }
 
 const Buttons = ({data}) => {
@@ -110,7 +87,6 @@ const Buttons = ({data}) => {
 
 	const handlePredict = async () => {
 		const lotteryHistory = data.map((item) => item.numbers.map((num) => Number(num)));
-
 		// Train the model
 		const model = await trainModel(lotteryHistory);
 
@@ -118,7 +94,16 @@ const Buttons = ({data}) => {
 		const latestData = lotteryHistory[0].slice(0, 7); // Use the most recent 7 numbers as input
 		const predictionTensor = model.predict(tf.tensor2d([latestData]));
 		const predictedNumbers = predictionTensor.dataSync();
-		const roundedPredictedNumbers = Array.from(predictedNumbers).map((number) => Math.round(number));
+		// const roundedPredictedNumbers = Array.from(predictedNumbers).map((number) => Math.round(number));
+		const roundedPredictedNumbers = Array.from(predictedNumbers).map((number) => {
+			let roundedNumber = Math.round(number);
+			if (roundedNumber < 1) {
+				roundedNumber = 1;
+			} else if (roundedNumber > 55) {
+				roundedNumber = 55;
+			}
+			return roundedNumber;
+		});
 		console.log(123, roundedPredictedNumbers);
 	};
 
@@ -130,16 +115,17 @@ const Buttons = ({data}) => {
 
 	const test = async () => {
 		const lotteryHistory = data.map((item) => item.numbers.map((num) => Number(num)));
-		try {
-			const model = await trainModel2(lotteryHistory);
-			const latestData = lotteryHistory[0].slice(0, 7); // Use the most recent draw for prediction
-			const predictionTensor = model.predict(tf.tensor2d([latestData]));
-			const predictedNumbers = predictionTensor.dataSync();
-			const roundedPredictedNumbers = Array.from(predictedNumbers).map((number) => Math.round(number));
-			console.log(123, roundedPredictedNumbers);
-		} catch (err) {
-			console.log(123, err);
-		}
+		// Train the model
+		const model = await trainModel(lotteryHistory, 'sgd', 'categoricalCrossentropy');
+
+		// Make a prediction using the latest data
+		const latestData = lotteryHistory[0].slice(0, 7); // Use the most recent 7 numbers as input
+		const predictionTensor = model.predict(tf.tensor2d([latestData]));
+		const predictedNumbers = predictionTensor.dataSync();
+        const roundedPredictedNumbers = Array.from(predictedNumbers).map((number) => Math.round(number));
+		// const roundedPredictedNumbers = adjustPredictedNumbers(predictedNumbers);
+
+		console.log(123, predictedNumbers);
 	};
 
 	return data && data.length ? (
@@ -192,10 +178,26 @@ const Buttons = ({data}) => {
 				<Button colorScheme='blue' onClick={handlePredict}>
 					Phân tích
 				</Button>
-				<Button onClick={test}>Test</Button>
+				<Button onClick={test}>Test SGD</Button>
 			</div>
 		</Fragment>
 	) : null;
 };
 
 export default memo(Buttons);
+
+
+/*
+epochs (1): The number of times to iterate over the entire dataset. Increasing this value can help the model learn better but may also increase the risk of overfitting.
+batchSize (32): Number of samples per gradient update. Smaller batch sizes can make the model more robust but may take longer to train. Larger batch sizes can speed up training but may require more memory.
+validationSplit (0.0): Fraction of the training data to be used as validation data. A value between 0 and 1. Useful for evaluating the model on unseen data during training.
+shuffle (true): Whether to shuffle the training data before each epoch. Shuffling can help the model generalize better by preventing the model from learning the order of the data.
+classWeight (null): Dictionary mapping class indices to a weight for the class. Useful for handling class imbalance by giving more importance to underrepresented classes
+sampleWeight (null):  Array of weights for each sample in the training data. Useful for assigning different weights to different samples
+initialEpoch (0): Epoch at which to start training. Useful for resuming training from a certain point
+stepsPerEpoch (null): Total number of steps (batches of samples) to draw from the generator at each epoch. If not specified, it will default to the number of samples divided by the batch size
+validationSteps (null): Total number of steps (batches of samples) to draw from the validation generator at each epoch. Only relevant if validationData is provided as a generator
+validationBatchSize (null): Batch size to use for validation data if validationData is a tf.data.Dataset. If unspecified, it defaults to the value of batchSize.
+validationFreq (1): Specifies how often to perform validation (e.g., every 1 epoch or every 5 epochs). If a number k, validation will be run at the end of every k epochs.
+callbacks(null): List of callbacks to be called during training. Callbacks can be used for tasks such as early stopping, learning rate scheduling, and more.
+*/

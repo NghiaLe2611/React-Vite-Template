@@ -1,4 +1,4 @@
-import { countNumberOccurrences, occurencesOfNextTime, occurrencesWithNumber } from '@/helpers';
+import { countNumberOccurrences, occurencesOfNextTime, occurrencesWithNumber } from '@/utils';
 import useDivideArr from '@/hooks/useDivideArr';
 import {
 	Modal,

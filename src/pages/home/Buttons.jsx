@@ -1,12 +1,14 @@
 import CustomModal from '@/components/modal';
-import {countOccurrences, countOddAndEven} from '@/helpers';
-import {Box, Button, Tab, TabList, TabPanel, TabPanels, Tabs} from '@chakra-ui/react';
-import {Fragment, memo, useEffect, useMemo, useState} from 'react';
+import { countOccurrences, countOddAndEven } from '@/utils';
+import { Box, Button, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { Fragment, memo, useEffect, useMemo, useState } from 'react';
 import classes from './button.module.scss';
 import * as tf from '@tensorflow/tfjs';
 
+const MAX_NUMBER = 55;
+
 // Train the model
-async function trainModel(lotteryHistory, optimizer = 'adam', loss = 'meanSquaredError') {
+async function trainModel(lotteryHistory, optimizer = 'adam', loss = 'meanSquaredError', epochs = 100) {
 	// Prepare feature and target data
 	const features = [];
 	const targets = [];
@@ -27,53 +29,86 @@ async function trainModel(lotteryHistory, optimizer = 'adam', loss = 'meanSquare
 
 	// Define the model
 	const model = tf.sequential();
-	model.add(tf.layers.dense({units: 128, activation: 'relu', inputShape: [xTrain.shape[1]]}));
-	model.add(tf.layers.dense({units: 64, activation: 'relu'}));
-	model.add(tf.layers.dense({units: xTrain.shape[1], activation: 'linear'}));
+	model.add(tf.layers.dense({ units: 128, activation: 'relu', inputShape: [xTrain.shape[1]] }));
+	model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
+	model.add(tf.layers.dense({ units: xTrain.shape[1], activation: 'linear' }));
 
 	model.compile({
-		optimizer, // sdg
+		optimizer, // sdg, rmsprop
 		loss, // sparseCategoricalCrossentropy
 		metrics: ['accuracy'],
 	});
 
 	// Train the model
 	await model.fit(xTrain, yTrain, {
-		epochs: 100,
+		epochs,
 		shuffle: true,
+		callbacks: {
+			onEpochEnd: (epoch, logs) => {
+				console.log(`Epoch ${epoch + 1}: loss = ${logs.loss}, accuracy = ${logs.acc}`);
+			},
+		},
 	});
-
-	// await model.fit(xTrain, yTrain, {
-	// 	epochs: 50,
-	// 	callbacks: {
-	// 		onEpochEnd: (epoch, logs) => {
-	// 			console.log(`Epoch ${epoch + 1}: loss = ${logs.loss}, accuracy = ${logs.acc}`);
-	// 		},
-	// 	},
-	// });
 
 	return model;
 }
 
-function adjustPredictedNumbers(numbers) {
-	// Ensure numbers are within the range 1-55 and unique
-	const adjustedNumbers = new Set();
-	for (let num of numbers) {
-		let adjusted = Math.round(num);
-		if (adjusted < 1) adjusted = 1;
-		if (adjusted > 55) adjusted = 55;
-		adjustedNumbers.add(adjusted);
+async function trainModel2(lotteryHistory, optimizer = 'adam', loss = 'meanSquaredError', epochs = 100, maxNumber = MAX_NUMBER) {
+	const numberOfRows = lotteryHistory.length;
+	const windowLength = 2;
+	const numberOfFeatures = 7;
+
+	// Normalize the data to the range [0, 1]
+	const scaledLotteryHistory = lotteryHistory.map((row) => row.map((num) => num / maxNumber));
+
+	// Prepare train and label data
+	const train = [];
+	const label = [];
+
+	for (let i = 0; i < numberOfRows - windowLength; i++) {
+		const window = scaledLotteryHistory.slice(i, i + windowLength);
+		train.push(window);
+		label.push(scaledLotteryHistory[i + windowLength]);
 	}
 
-	// If there are less than 7 unique numbers, add random numbers to make it 7
-	while (adjustedNumbers.size < 7) {
-		adjustedNumbers.add(Math.floor(Math.random() * 55) + 1);
-	}
+	const trainTensor = tf.tensor3d(train);
+	const labelTensor = tf.tensor2d(label);
 
-	return Array.from(adjustedNumbers);
+	// Create the LSTM model
+	const model = tf.sequential();
+	model.add(
+		tf.layers.lstm({
+			units: 50,
+			inputShape: [windowLength, numberOfFeatures],
+			returnSequences: true,
+		}),
+	);
+	model.add(tf.layers.dropout({ rate: 0.2 })); // Dropout for regularization
+	model.add(tf.layers.lstm({ units: 50 })); // Second LSTM layer
+	model.add(tf.layers.dropout({ rate: 0.2 })); // Dropout for regularization
+	model.add(tf.layers.dense({ units: numberOfFeatures })); // Dense output layer (6 features)
+
+	model.compile({
+		optimizer,
+		loss,
+		metrics: ['accuracy'],
+	});
+
+	// Train the model
+	await model.fit(trainTensor, labelTensor, {
+		epochs,
+		shuffle: true,
+		callbacks: {
+			onEpochEnd: (epoch, logs) => {
+				console.log(`Epoch ${epoch + 1}: loss = ${logs.loss}, accuracy = ${logs.acc}`);
+			},
+		},
+	});
+
+	return model;
 }
 
-const Buttons = ({data}) => {
+const Buttons = ({ data }) => {
 	const [occurences, setOccurences] = useState([]);
 
 	useEffect(() => {
@@ -111,21 +146,22 @@ const Buttons = ({data}) => {
 		return Math.round(occurences.length / 2);
 	}, [occurences]);
 
-	const handleAnalyze = () => {};
-
-	const test = async () => {
+	const test = async (optimizer = 'adam') => {
 		const lotteryHistory = data.map((item) => item.numbers.map((num) => Number(num)));
-		// Train the model
-		const model = await trainModel(lotteryHistory, 'sgd', 'categoricalCrossentropy');
+        console.log(123, lotteryHistory);
+        return;
+		const model = await trainModel2(lotteryHistory, optimizer);
 
-		// Make a prediction using the latest data
-		const latestData = lotteryHistory[0].slice(0, 7); // Use the most recent 7 numbers as input
-		const predictionTensor = model.predict(tf.tensor2d([latestData]));
-		const predictedNumbers = predictionTensor.dataSync();
-        const roundedPredictedNumbers = Array.from(predictedNumbers).map((number) => Math.round(number));
-		// const roundedPredictedNumbers = adjustPredictedNumbers(predictedNumbers);
+		const toPredict = lotteryHistory.slice(0, 2);
+		// Normalize the prediction input
+		const scaledToPredict = toPredict.map((row) => row.map((value) => value / MAX_NUMBER));
+		const predictionTensor = tf.tensor3d([scaledToPredict]);
+		const scaledPredictionOutput = model.predict(predictionTensor);
+		const predictionOutput = scaledPredictionOutput.arraySync()[0];
 
-		console.log(123, predictedNumbers);
+		// Reverse the scaling
+		const inverseScaledPredictionOutput = predictionOutput.map((value) => Math.round(value * MAX_NUMBER));
+		console.log(inverseScaledPredictionOutput);
 	};
 
 	return data && data.length ? (
@@ -135,10 +171,10 @@ const Buttons = ({data}) => {
 					<Box>
 						<Tabs>
 							<TabList>
-								<Tab _selected={{color: 'white', bg: 'var(--bg-primary)'}} className='rounded-t-md'>
+								<Tab _selected={{ color: 'white', bg: 'var(--bg-primary)' }} className='rounded-t-md'>
 									Số lần xuất hiện
 								</Tab>
-								<Tab _selected={{color: 'white', bg: 'var(--bg-primary)'}} className='rounded-t-md'>
+								<Tab _selected={{ color: 'white', bg: 'var(--bg-primary)' }} className='rounded-t-md'>
 									Chẵn/Lẻ
 								</Tab>
 							</TabList>
@@ -178,14 +214,14 @@ const Buttons = ({data}) => {
 				<Button colorScheme='blue' onClick={handlePredict}>
 					Phân tích
 				</Button>
-				<Button onClick={test}>Test SGD</Button>
+				<Button onClick={() => test()}>Test</Button>
+                <Button onClick={() => test('sgd')}>Test SGD</Button>
 			</div>
 		</Fragment>
 	) : null;
 };
 
 export default memo(Buttons);
-
 
 /*
 epochs (1): The number of times to iterate over the entire dataset. Increasing this value can help the model learn better but may also increase the risk of overfitting.
@@ -201,3 +237,5 @@ validationBatchSize (null): Batch size to use for validation data if validationD
 validationFreq (1): Specifies how often to perform validation (e.g., every 1 epoch or every 5 epochs). If a number k, validation will be run at the end of every k epochs.
 callbacks(null): List of callbacks to be called during training. Callbacks can be used for tasks such as early stopping, learning rate scheduling, and more.
 */
+
+// https://github.com/rahulmod/lottery-prediction-lstm/blob/main/lstm-lot-pred.ipynb

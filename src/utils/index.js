@@ -115,3 +115,40 @@ export function occurencesOfNextTime(data, inputNumber) {
 // 	console.log('Number frequencies:', numberFrequencies);
 // 	console.log('Most frequent numbers:', mostFrequentNumbers);
 // }
+
+// function adjustPredictedNumbers(numbers) {
+// 	// Ensure numbers are within the range 1-55 and unique
+// 	const adjustedNumbers = new Set();
+// 	for (let num of numbers) {
+// 		let adjusted = Math.round(num);
+// 		if (adjusted < 1) adjusted = 1;
+// 		if (adjusted > 55) adjusted = 55;
+// 		adjustedNumbers.add(adjusted);
+// 	}
+
+// 	// If there are less than 7 unique numbers, add random numbers to make it 7
+// 	while (adjustedNumbers.size < 7) {
+// 		adjustedNumbers.add(Math.floor(Math.random() * 55) + 1);
+// 	}
+
+// 	return Array.from(adjustedNumbers);
+// }
+
+// function createOptimizer(optimizerName) {
+// 	switch (optimizerName) {
+// 		case 'SGD':
+// 			return tf.train.sgd(0.01);
+// 		case 'RMSProp':
+// 			return tf.train.rmsprop(0.001, 0.9);
+// 		case 'Adagrad':
+// 			return tf.train.adagrad(0.01);
+// 		case 'Adadelta':
+// 			return tf.train.adadelta(0.95);
+// 		case 'Adamax':
+// 			return tf.train.adamax(0.002, 0.9, 0.999);
+// 		case 'Momentum':
+// 			return tf.train.momentum(0.01, 0.9);
+// 		default:
+// 			throw new Error(`Invalid optimizer name: ${optimizerName}`);
+// 	}
+// }

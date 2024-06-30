@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 import axiosClient from '@/api/axiosClient';
-import { countNumberOccurrences } from '@/helpers';
+import { countNumberOccurrences } from '@/utils';
 import {
 	Box,
 	Button,
@@ -59,9 +59,12 @@ const HomePage = () => {
 		return TABS[tabIndex];
 	}, [tabIndex]);
 
-	const { isLoading, data } = useQuery({
+	const { isLoading, data, error } = useQuery({
 		queryKey: ['lottery_result', type],
 		queryFn: () => fetchData(type),
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        retry: false,
 	});
 
 	const { onClose } = useDisclosure();
@@ -102,11 +105,15 @@ const HomePage = () => {
         onOpen();
         setCurrentNumber(num);
     };
-
+    
 	const content = useMemo(() => {
 		if (isLoading) {
 			return <Spinner size='xl' color='blue.500' />;
 		}
+
+        if (error) {
+            return <div>{error?.message}</div>;
+        }
 
 		return (
 			<div className='p-2'>

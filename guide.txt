@@ -1,0 +1,51 @@
+Phương pháp 1: Sử dụng mạng nơ-ron đơn giản (Dense Neural Network)
+Quy trình:
+
+Chuẩn bị dữ liệu:
+Đảo ngược lịch sử xổ số (reversedHistory) để dữ liệu mới nhất nằm ở cuối.
+Chia dữ liệu thành features và targets. Mỗi features là một bộ số xổ số và targets là bộ số xổ số tiếp theo trong lịch sử.
+Chuyển đổi dữ liệu thành tensors: Sử dụng tf.tensor2d để chuyển đổi mảng thành tensor 2D.
+Xây dựng mô hình:
+Sử dụng mạng nơ-ron với ba lớp dense (fully connected layers).
+Lớp đầu tiên có 128 đơn vị, lớp thứ hai có 64 đơn vị, và lớp cuối cùng trả về một vector có cùng kích thước với đầu vào.
+Biên dịch và huấn luyện mô hình:
+Sử dụng bộ tối ưu hoá (optimizer) và hàm mất mát (loss function) được chỉ định.
+Huấn luyện mô hình với số epoch được chỉ định và in ra kết quả sau mỗi epoch.
+Phương pháp 2: Sử dụng mạng nơ-ron LSTM (Long Short-Term Memory)
+Quy trình:
+
+Chuẩn bị dữ liệu:
+Chuẩn hóa dữ liệu để giá trị nằm trong khoảng [0, 1] bằng cách chia mỗi số cho maxNumber.
+Chia dữ liệu thành các cửa sổ (windows) với chiều dài là 2 và chuẩn bị train và label.
+Chuyển đổi dữ liệu thành tensors: Sử dụng tf.tensor3d cho train và tf.tensor2d cho label.
+Xây dựng mô hình:
+Sử dụng hai lớp LSTM với số đơn vị là 50.
+Sử dụng các lớp dropout để giảm overfitting.
+Lớp cuối cùng là một lớp dense để dự đoán kết quả.
+Biên dịch và huấn luyện mô hình:
+Sử dụng bộ tối ưu hoá và hàm mất mát được chỉ định.
+Huấn luyện mô hình với số epoch được chỉ định và in ra kết quả sau mỗi epoch.
+Sự khác biệt chính:
+Loại mô hình:
+
+Phương pháp 1 sử dụng mạng nơ-ron đơn giản (Dense Neural Network).
+Phương pháp 2 sử dụng mạng nơ-ron LSTM, một loại mạng nơ-ron hồi quy phù hợp cho dữ liệu chuỗi thời gian.
+Cách xử lý dữ liệu:
+
+Phương pháp 1 sử dụng các bộ số xổ số trực tiếp như đầu vào và mục tiêu.
+Phương pháp 2 chuẩn hóa dữ liệu và tạo các cửa sổ (windows) để mô hình LSTM có thể học được sự phụ thuộc thời gian trong dữ liệu.
+Cấu trúc mô hình:
+
+Phương pháp 1 có cấu trúc đơn giản với các lớp dense.
+Phương pháp 2 có cấu trúc phức tạp hơn với các lớp LSTM và dropout để học các mẫu thời gian và giảm overfitting.
+Đánh giá và cải tiến:
+Phương pháp nào tốt hơn?
+
+Phương pháp 2 có thể tốt hơn do nó sử dụng LSTM, phù hợp hơn cho dữ liệu chuỗi thời gian như lịch sử xổ số. LSTM có khả năng học và dự đoán các mẫu trong dữ liệu chuỗi thời gian tốt hơn các mạng nơ-ron thông thường.
+Cải tiến mô hình:
+
+Thêm các tính năng khác: Có thể bổ sung thêm các thông tin khác như ngày tháng, thời tiết, sự kiện đặc biệt để làm giàu dữ liệu.
+Sử dụng các lớp phức tạp hơn: Thêm nhiều lớp LSTM hoặc các loại lớp khác như GRU.
+Tăng số lượng epoch và điều chỉnh hyperparameter: Điều chỉnh số lượng đơn vị trong các lớp, learning rate, và các thông số khác của bộ tối ưu hoá.
+Dữ liệu lớn hơn: Sử dụng nhiều dữ liệu lịch sử hơn để mô hình học tốt hơn.
+Regularization và Dropout: Sử dụng các kỹ thuật regularization khác như L2 regularization, tăng tỉ lệ dropout.
